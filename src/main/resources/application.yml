@@ -2,6 +2,10 @@ spring:
   kafka:
     consumer:
       bootstrap-servers: localhost:9092
+      value-deserializer: com.heiio.bookkafka.serialization.ArticleDeserializer
     producer:
       bootstrap-servers: localhost:9092
       transaction-id-prefix: kafka_tx
+      value-serializer: com.heiio.bookkafka.serialization.ArticleSerializer
+server:
+  port: 9080
