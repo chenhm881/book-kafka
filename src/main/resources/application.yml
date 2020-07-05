@@ -1,11 +1,21 @@
 spring:
   kafka:
     consumer:
-      bootstrap-servers: localhost:9092
-      value-deserializer: com.heiio.bookkafka.serialization.ArticleDeserializer
+      value-deserializer: com.heiio.bookkafka.serialization.BlogDeserializer
     producer:
-      bootstrap-servers: localhost:9092
       transaction-id-prefix: kafka_tx
-      value-serializer: com.heiio.bookkafka.serialization.ArticleSerializer
+      acks: 1
+      retries: 3
+    bootstrap-servers: localhost:9092
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://47.98.163.117:3306/ming_blog
+    username: root
+    password: 123456
 server:
   port: 9080
+
+
+mybatis:
+  config-location:  classpath:mybatis-config.xml
+  type-aliases-package: com.heiio.bookkafka.model.blog

@@ -2,6 +2,7 @@ package com.heiio.bookkafka.service;
 
 import com.heiio.bookkafka.model.Article;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.network.KafkaChannel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -40,6 +41,7 @@ public class ArticleProducer {
             tx.send(producerRecord);
             return true;
         });
+
 
     }
 

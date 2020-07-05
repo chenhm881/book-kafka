@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.heiio.bookkafka.mapper.BlogMapper">
+    <select id="insertBlog" statementType="CALLABLE" useCache="false" resultType="java.lang.Integer">
+       {call t_blog_add_kafka(#{id,mode=OUT, jdbcType=INTEGER}, #{blog.title,mode=IN}, #{blog.description,mode=IN}, #{blog.published,mode=IN},
+       #{blog.content,mode=IN}, #{topic,mode=IN}, #{partition,mode=IN}, #{offset,mode=IN})}
+    </select>
+
+
+</mapper>
