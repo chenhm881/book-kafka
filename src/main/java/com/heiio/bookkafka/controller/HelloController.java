@@ -3,6 +3,7 @@ package com.heiio.bookkafka.controller;
 import com.heiio.bookkafka.model.Article;
 import com.heiio.bookkafka.model.blog.Blog;
 import com.heiio.bookkafka.service.ArticleProducer;
+import com.heiio.bookkafka.service.BlogConsumer;
 import com.heiio.bookkafka.service.BlogProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,17 +29,15 @@ public class HelloController {
     @Autowired
     private BlogProducer blogProducer;
 
+    @Autowired
+    private BlogConsumer blogConsumer;
+
     @RequestMapping("/producer")
     public String articleProducer (Article article) {
          articleProducer.send(article);
          return "";
     }
 
-    @RequestMapping("/test")
-    public String testProducer (String test) {
-        articleProducer.send(test);
-        return "";
-    }
 
     @RequestMapping("/bloglist")
     public ResponseEntity<List<Blog>> getBlogList() {
@@ -57,6 +56,13 @@ public class HelloController {
         //articleProducer.send(test);
         return "successfully";
     }
+
+    @RequestMapping("/test")
+    public String testProducer (String test) {
+        blogProducer.send(test);
+        return "";
+    }
+
 
 
 }

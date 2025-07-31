@@ -1,11 +1,13 @@
 package com.heiio.bookkafka.config;
 
+import com.heiio.bookkafka.serialization.BlogDeserializer;
 import com.heiio.bookkafka.serialization.BlogSerializer;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -17,10 +19,12 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.transaction.KafkaTransactionManager;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 
 @Configuration
@@ -44,10 +48,10 @@ public class KafkaConfig {
 //
 //    @Value("${spring.kafka.producer.linger}")
 //    private int linger;
-
+//
     @Value("${spring.kafka.producer.retries}")
     private Integer retries;
-
+//
 //    @Value("${spring.kafka.producer.batch-size}")
 //    private Integer batchSize;
 //
@@ -71,26 +75,27 @@ public class KafkaConfig {
         //producer端的消息确认机制,-1和all都表示消息不仅要写入本地的leader中还要写入对应的副本中
         props.put(ProducerConfig.ACKS_CONFIG, "-1");//单个brok 推荐使用'1'
         //单条消息的最大值以字节为单位,默认值为1048576
-        props.put(ProducerConfig.LINGER_MS_CONFIG, 10485760);
+        props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, 10485760);
         //设置broker响应时间，如果broker在60秒之内还是没有返回给producer确认消息，则认为发送失败
         props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 60000);
         //指定拦截器(value为对应的class)
         //props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, "com.te.handler.KafkaProducerInterceptor");
         //设置压缩算法(默认是木有压缩算法的)
         //props.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");//snappy
+
         return props;
     }
 
     public Map<String, Object> consumerConfigs() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
         props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "15000");
         //一次拉取消息数量
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "5");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, BlogSerializer.class);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, BlogDeserializer.class);
         return props;
     }
 
@@ -105,7 +110,8 @@ public class KafkaConfig {
         DefaultKafkaProducerFactory<Integer,String>  producerFactory =  new DefaultKafkaProducerFactory(producerConfigs());
 
         //设置事务Id前缀 开启事务
-        producerFactory.setTransactionIdPrefix("tx-");
+        producerFactory.setTransactionIdPrefix("tx-" + UUID.randomUUID());
+
         return producerFactory;
     }
 
@@ -126,7 +132,7 @@ public class KafkaConfig {
 
     @Bean  //kafka客户端，在spring中创建这个bean之后可以注入并且创建topic,用于集群环境，创建对个副本
     public AdminClient adminClient() {
-        return AdminClient.create(kafkaAdmin().getConfig());
+        return AdminClient.create(kafkaAdmin().getConfigurationProperties());
     }
 
     //创建TopicName为topic.quick.initial的Topic并设置分区数为8以及副本数为1
@@ -140,12 +146,30 @@ public class KafkaConfig {
         ConcurrentKafkaListenerContainerFactory container = new ConcurrentKafkaListenerContainerFactory();
         container.setConsumerFactory(new DefaultKafkaConsumerFactory(consumerConfigs()));
         //设置并发量，小于或等于Topic的分区数
-        //container.setConcurrency(5);
+        container.setConcurrency(5);
+
+        container.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+
         //设置为批量监听
-        //container.setBatchListener(true);
+        container.setBatchListener(true);
         return container;
     }
 
+    @Bean("singleContainerFactory")
+    public ConcurrentKafkaListenerContainerFactory<String, String> singleContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
 
+        // 配置消费者工厂
+        factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(consumerConfigs()));
+
+        // 并发线程数（≤ 分区数）
+        factory.setConcurrency(3);
+
+        // 自动提交偏移量（简单场景可用）
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.BATCH);
+
+        return factory;
+    }
 
 }

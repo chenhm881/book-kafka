@@ -18,8 +18,23 @@ public class BlogProducer {
         this.send("topic.blog", 1, "", blog);
     }
 
+    public void send(String name) {
+        kafkaTemplate.getDefaultTopic();
+        this.send("topic.blog", 1, "", name);
+    }
+
     @Transactional(rollbackFor = RuntimeException.class)
     public void send(String topic, Integer partition, String key, Blog blog) {
+        ProducerRecord<String, Blog> producerRecord = new ProducerRecord<>(topic, blog);
+        kafkaTemplate.executeInTransaction(tx -> {
+            tx.send(producerRecord);
+            return true;
+        });
+    }
+    @Transactional
+    public void send(String topic, Integer partition, String key, String message) {
+        Blog blog = new Blog();
+        blog.setTitle(message);
         ProducerRecord<String, Blog> producerRecord = new ProducerRecord<>(topic, blog);
         kafkaTemplate.executeInTransaction(tx -> {
             tx.send(producerRecord);

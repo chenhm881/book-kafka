@@ -1,16 +1,16 @@
 package com.heiio.bookkafka.serialization;
 
-import com.heiio.bookkafka.model.Article;
-import org.apache.avro.data.TimeConversions;
-import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.specific.SpecificData;
-import org.apache.avro.specific.SpecificDatumWriter;
-import org.apache.kafka.common.serialization.Serializer;
-import org.omg.IOP.CodecFactory;
-
-import java.io.ByteArrayOutputStream;
-import java.util.Map;
+//import com.heiio.bookkafka.model.Article;
+//import org.apache.avro.data.TimeConversions;
+//import org.apache.avro.file.DataFileWriter;
+//import org.apache.avro.io.DatumWriter;
+//import org.apache.avro.specific.SpecificData;
+//import org.apache.avro.specific.SpecificDatumWriter;
+//import org.apache.kafka.common.serialization.Serializer;
+//import org.omg.IOP.CodecFactory;
+//
+//import java.io.ByteArrayOutputStream;
+//import java.util.Map;
 
 //public class ArticleDatumSerializer implements Serializer<Article> {
 //    @Override
